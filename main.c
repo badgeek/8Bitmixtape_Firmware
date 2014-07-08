@@ -61,8 +61,8 @@ void adc_start()
 void timer_init()
 {
     //PWM SOUND OUTPUT
-    //TCCR0A |= (1<<WGM00)|(1<<WGM01); //Fast pwm
-    TCCR0A |= (1<<WGM00) ; //Phase correct pwm
+    TCCR0A |= (1<<WGM00)|(1<<WGM01); //Fast pwm
+    //TCCR0A |= (1<<WGM00) ; //Phase correct pwm
     TCCR0A |= (1<<COM0A1); //Clear OC0A/OC0B on Compare Match when up-counting.
     TCCR0B |= (1<<CS00);//no prescale
         
@@ -85,8 +85,8 @@ void timer_init()
     
     //SAMPLE RATE
     //OCR1C = 128; // (16500000/16)/8000 = 128
-    OCR1C = 93; // (16500000/16)/11025 = 93
-    //OCR1C = 46; // (16500000/16)/22050 = 46
+    //OCR1C = 93; // (16500000/16)/11025 = 93
+    OCR1C = 46; // (16500000/16)/22050 = 46
     //OCR1C = 23; // (16500000/16)/44100 = 23
 
     
@@ -149,7 +149,6 @@ int main(void)
       
 
 
-
     switch (songs)
     {
         case 0:
@@ -166,6 +165,9 @@ int main(void)
         break;
     }
    
+    OCR0A = snd;
+    t++;
+
 
 
     }
@@ -175,6 +177,12 @@ int main(void)
 
 ISR(TIMER1_COMPA_vect)
 {
+
+
+
+
+
+
     //OCR1C = pot2;
 
     //delay_efek[t%99] = ((t * ((t>>12|t>>8)&63&t>>4))/2);
@@ -209,8 +217,7 @@ ISR(TIMER1_COMPA_vect)
     //sfx = (snd >> 2 << 3);
     //sfx = sfx | j;
     //
-    OCR0A = snd;
-        t++;
+
 
     //if (button_is_pressed(PINB, PB1)) {
     //    t = t - 300;
