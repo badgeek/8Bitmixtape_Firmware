@@ -19,6 +19,8 @@
 
 
 volatile unsigned long t; // long
+volatile unsigned long u; // long
+
 volatile uint8_t snd; // 0...255
 volatile uint8_t sfx; // 0...255
 
@@ -30,9 +32,8 @@ volatile uint8_t pot3; // 0...255
 
 volatile uint8_t btn_toggle = 0;
 volatile uint8_t songs = 0;
-
-
-uint8_t btn_previous = 0;
+volatile unsigned int btn_hold; // long
+volatile uint8_t btn_previous = 1;
 
 //ADMUX ADC
 
@@ -41,7 +42,27 @@ volatile uint8_t adc2 = _BV(ADLAR) | _BV(MUX1); //PB4-ADC2 pot2
 volatile uint8_t adc3 = _BV(ADLAR) | _BV(MUX0) | _BV(MUX1); //PB3-ADC3 pot3
 
 
-int button_press_time = 0;
+#define ENTER_CRIT()    {byte volatile saved_sreg = SREG; cli()
+#define LEAVE_CRIT()    SREG = saved_sreg;}
+
+
+#define true 1
+#define false 0
+
+//button state
+#define BUTTON_NORMAL 0
+#define BUTTON_PRESS 1
+#define BUTTON_RELEASE 2
+#define BUTTON_HOLD 3
+
+uint8_t button_timer_enabled = false;
+unsigned int button_timer = 0;
+unsigned int button_last_pressed = 0;
+
+
+//loop mode on button hold
+uint8_t start_loop = false;
+unsigned int loop_timer = 0;
 
 void adc_init()
 {
@@ -61,8 +82,8 @@ void adc_start()
 void timer_init()
 {
     //PWM SOUND OUTPUT
-    //TCCR0A |= (1<<WGM00)|(1<<WGM01); //Fast pwm
-    TCCR0A |= (1<<WGM00) ; //Phase correct pwm
+    TCCR0A |= (1<<WGM00)|(1<<WGM01); //Fast pwm
+    //TCCR0A |= (1<<WGM00) ; //Phase correct pwm
     TCCR0A |= (1<<COM0A1); //Clear OC0A/OC0B on Compare Match when up-counting.
     TCCR0B |= (1<<CS00);//no prescale
         
@@ -130,58 +151,107 @@ int main(void)
     adc_start(); //start adc conversion
     
     // run forever
-    // 
     
-    //songs = 3;
     while(1)
     {
-       uint8_t btn_now = button_is_pressed(PINB, PB1);
-
- 
-       
-            if ( btn_previous != btn_now && btn_now == 1 ) { 
-                songs++;
-                if (songs > 3) songs = 0;
-                btn_previous = btn_now;
-            }else{
-                btn_previous = btn_now;
-            }
-      
-
-
-
-    switch (songs)
-    {
-        case 0:
-        snd =(t*9&t>>pot1|t*pot2&t>>7|t*3&t/1024)-1;
-        break;
-        case 1:
-        snd = (t * (t>>5|t>>pot1))>>(t>>pot2);
-        break;
-        case 2:
-        snd = (t*pot1&t>>7)|(t*pot2&t>>10);
-        break;
-        case 3:
-        snd =  t * ((t>>12|t>>8)&63&t>>4);
-        break;
-    }
-   
-
+        /* 
+        uint8_t btn_now = button_is_pressed(PINB, PB1);
+        if ( btn_previous != btn_now && btn_now == 1 ) { 
+            songs++;
+            if (songs > 3) songs = 0;
+            btn_previous = btn_now;
+        }else{
+            btn_previous = btn_now;
+        }      
+        */
+        switch (songs)
+        {
+            case 0:
+            snd = {template};
+            break;
+            case 1:
+            snd =(t*9&t>>pot1|t*pot2&t>>7|t*3&t/1024)-1;
+            break;
+            case 2:
+            snd = (t * (t>>5|t>>pot1))>>(t>>pot2);
+            break;
+            case 3:
+            snd = (t*pot1&t>>7)|(t*pot2&t>>10);
+            break;
+            case 4:
+            snd =  t * ((pot1>>12|t>>8)&pot2&t>>4);
+            break;
+        }
 
     }
-    
     return 0;
 }
 
 ISR(TIMER1_COMPA_vect)
 {
+
+    uint8_t btn_now = button_is_pressed(PINB, PB1);
+    uint8_t button_state = 0;
+
+    if ( btn_previous != btn_now && btn_now == 0 ) {    
+        button_state  = BUTTON_PRESS;
+    }else if( btn_previous != btn_now && btn_now == 1  )
+    {
+        button_state  = BUTTON_RELEASE;
+    }else if (btn_previous == btn_now && btn_now == 0)
+    {
+        button_state  = BUTTON_HOLD;
+    }else{
+        button_state  = BUTTON_NORMAL;
+    }   
+
+
+    if (button_state == BUTTON_PRESS)
+    {
+        u = t;
+        //t = 0;
+        //songs++;
+        //if (songs > 4) songs = 0;
+
+        if (button_timer_enabled == false)
+        {
+            button_timer_enabled = true;
+        }else{
+            if (button_timer < 5512)
+            {
+                songs++;
+                if (songs > 4) songs = 0;
+                button_timer_enabled  = false;
+            }
+        }
+
+    }
+
+
+    if (button_state == BUTTON_HOLD)
+    {
+        loop_timer++;
+        if (loop_timer > (1378))
+        {
+            t = u;
+            loop_timer = 0;
+        }  
+    }
+
+
+    if (button_state == BUTTON_RELEASE)
+    {
+        //t = t - 11025;
+        //t = 0;
+    }
+
+
+    btn_previous = btn_now;
+
+      
     //OCR1C = pot2;
-
     //delay_efek[t%99] = ((t * ((t>>12|t>>8)&63&t>>4))/2);
- 
     //int value50 = 30;
-
-
 
     //    if (btn_toggle)
     //    {
@@ -189,8 +259,6 @@ ISR(TIMER1_COMPA_vect)
     //    }else{
     //        snd = (t * (t>>5|t>>pot1))>>(t>>pot2); //viznut
     //    }
-
-    
 
     //snd = {template};
     //snd =t*(t/256)-t*(t/pot1)+t*(t>>5|t>>pot2|t<<2&t>>1);
@@ -209,8 +277,11 @@ ISR(TIMER1_COMPA_vect)
     //sfx = (snd >> 2 << 3);
     //sfx = sfx | j;
     //
+    //
+    
+    
     OCR0A = snd;
-        t++;
+    t++;
 
     //if (button_is_pressed(PINB, PB1)) {
     //    t = t - 300;
@@ -222,7 +293,15 @@ ISR(TIMER1_COMPA_vect)
     //    j = value50;
     //}
     
-
+    if (button_timer_enabled)
+    {
+        button_timer++;
+        if (button_timer > 33075)
+        {
+            button_timer = 0;
+            button_timer_enabled = false;
+        } 
+    }
 }
 
 ISR(ADC_vect)
