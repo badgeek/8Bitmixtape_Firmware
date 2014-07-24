@@ -313,6 +313,7 @@ ISR(TIMER1_COMPA_vect)
 
     //sound generator pwm out
     OCR0A = snd;
+    t++;
 
     //button logic    
     btn1_previous = btn1_now;
