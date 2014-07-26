@@ -263,64 +263,17 @@ ISR(TIMER1_COMPA_vect)
 
     //start button 1 action
 
-    if (button1_state == BUTTON_PRESS)
-    {
-        start_loop = false;
-        u = t;
-
-        //double click
-        if (button_timer_enabled == false)
-        {
-            enable_button_timer();
-        }else{
-            if (button_timer > 1000)
-            {
-                if (button_timer < 7350)
-                {
-                    if (songs < SONGS_COUNT)
-                    {
-                        songs++;
-                    }else{
-                        songs = 0;
-                    }
-                    disable_button_timer();
-                }else{
-                    disable_button_timer();
-                }
-            }
-
-        }
-    }
-
-
-    if (button1_state == BUTTON_HOLD)
-    {
-       hold_timer++;
-    }
-
 
     if (button1_state == BUTTON_RELEASE)
     {
-        if (btn1_previous == 0)
+        if (songs < SONGS_COUNT)
         {
-            loop_max = (t-u);
-            if (hold_timer > 2756)
-            {
-                start_loop = true;
-            }
-            hold_timer = 0;
+            songs++;
+        }else{
+            songs = 0;
         }
     }
 
-    if (start_loop)
-    {
-        loop_timer++;
-        if (loop_timer > loop_max)
-        {
-            loop_timer = 0;
-            t = u;
-        }
-    }
 
     //end button 1 action
 
@@ -348,16 +301,6 @@ ISR(TIMER1_COMPA_vect)
     //button logic    
     btn1_previous = btn1_now;
     btn2_previous = btn2_now;
-
-    //debouncing button 1
-    if (button_timer_enabled)
-    {
-        button_timer++;
-        if (button_timer > 11025)
-        {
-            disable_button_timer();
-        } 
-    }
 
 }
 
