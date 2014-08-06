@@ -1,6 +1,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
+#include <avr/pgmspace.h>
 
 /*
  
@@ -17,22 +18,20 @@
  
 */
 
+#define SONGS_COUNT 1
 
 volatile unsigned long t; // long
+volatile unsigned long u; // long
 volatile uint8_t snd; // 0...255
-volatile uint8_t sfx; // 0...255
 
 volatile uint8_t pot1; // 0...255
 volatile uint8_t pot2; // 0...255
 volatile uint8_t pot3; // 0...255
 
-//volatile int j = 50;
-
-volatile uint8_t btn_toggle = 0;
 volatile uint8_t songs = 0;
 
-
-uint8_t btn_previous = 0;
+volatile uint8_t btn1_previous = 1;
+volatile uint8_t btn2_previous = 1;
 
 //ADMUX ADC
 
@@ -40,8 +39,30 @@ volatile uint8_t adc1 = _BV(ADLAR) | _BV(MUX0); //PB2-ADC1 pot1
 volatile uint8_t adc2 = _BV(ADLAR) | _BV(MUX1); //PB4-ADC2 pot2
 volatile uint8_t adc3 = _BV(ADLAR) | _BV(MUX0) | _BV(MUX1); //PB3-ADC3 pot3
 
+#define ENTER_CRIT()    {byte volatile saved_sreg = SREG; cli()
+#define LEAVE_CRIT()    SREG = saved_sreg;}
 
-int button_press_time = 0;
+#define true 1
+#define false 0
+
+//button state
+#define BUTTON_NORMAL 0
+#define BUTTON_PRESS 1
+#define BUTTON_RELEASE 2
+#define BUTTON_HOLD 3
+
+//button 1 timer
+uint8_t button_timer_enabled = false;
+unsigned int button_timer = 0;
+unsigned int button_last_pressed = 0;
+
+
+//loop mode on button 1 hold
+uint8_t start_loop = false;
+unsigned int loop_timer = 0;
+unsigned int loop_max = 0;
+unsigned int hold_timer = 0;
+
 
 void adc_init()
 {
@@ -84,12 +105,11 @@ void timer_init()
     //TCCR1 |= _BV(CS10) | _BV(CS13); // prescale 256    
     
     //SAMPLE RATE
-    //OCR1C = 128; // (16500000/16)/8000 = 128
-    //OCR1C = 93; // (16500000/16)/11025 = 93
-    OCR1C = 46; // (16500000/16)/22050 = 46
+    OCR1C = 120; // (16500000/16)/8000 = 128
+    //OCR1C = 45; // (16500000/16)/11025 = 93
+    //OCR1C = 22; // (16500000/16)/22050 = 46
     //OCR1C = 23; // (16500000/16)/44100 = 23
 
-    
     // babygnusb led pin
     DDRB |= (1<<PB0); //pin connected to led
     
@@ -98,8 +118,9 @@ void timer_init()
 
 void button_init()
 {
-    DDRB &= ~(1<<PB1); //set to input
-    PORTB |= (1<<PB1); //pin btn       
+    //button is pb1 and pb3
+    DDRB &= ~(1<<PB1|1<<PB3); //set to input
+    PORTB |= (1<<PB1|1<<PB3); //pin btn       
 }
 
 
@@ -115,10 +136,16 @@ int button_is_pressed(uint8_t button_pin, uint8_t button_bit)
     return 0;
 }
 
-int button_is_changed()
+void disable_button_timer()
 {
-return 0;
-        
+    button_timer_enabled = false;
+    button_timer = 0;
+}
+
+void enable_button_timer()
+{
+    button_timer_enabled = true;
+    button_timer = 0;
 }
 
 int main(void)
@@ -130,105 +157,123 @@ int main(void)
     adc_start(); //start adc conversion
     
     // run forever
-    // 
     
-    //songs = 3;
     while(1)
     {
-       uint8_t btn_now = button_is_pressed(PINB, PB1);
-
- 
-       
-            if ( btn_previous != btn_now && btn_now == 1 ) { 
-                songs++;
-                if (songs > 3) songs = 0;
-                btn_previous = btn_now;
-            }else{
-                btn_previous = btn_now;
-            }
-      
-
-
-    switch (songs)
-    {
-        case 0:
-        snd =(t*9&t>>pot1|t*pot2&t>>7|t*3&t/1024)-1;
-        break;
-        case 1:
-        snd = (t * (t>>5|t>>pot1))>>(t>>pot2);
-        break;
-        case 2:
-        snd = (t*pot1&t>>7)|(t*pot2&t>>10);
-        break;
-        case 3:
-        snd =  t * ((t>>12|t>>8)&63&t>>4);
-        break;
-    }
-   
-    OCR0A = snd;
-    t++;
+        /* 
+        uint8_t btn1_now = button_is_pressed(PINB, PB1);
+        if ( btn1_previous != btn1_now && btn1_now == 1 ) { 
+            songs++;
+            if (songs > 3) songs = 0;
+            btn1_previous = btn1_now;
+        }else{
+            btn1_previous = btn1_now;
+        }      
+        */
+        switch (songs)
+        {
 
 
+            case 0:
+            snd = t * ((pot1>>12|t>>8)&pot2&t>>4);
+            //snd = (t*t/(256-pot1))&(t>>((t/(1024-pot2))%16))^t%64*(0xC0D3DE4D69>>(t>>9&30)&t%32)*t>>18;
+            break;
+
+            case 1:
+            snd = (t&t>>(12+(pot1/2)))*(t>>4|t>>(8-(pot2/2)))^t>>6;
+            break;
+
+            
+
+  
+        }
 
     }
-    
     return 0;
 }
 
 ISR(TIMER1_COMPA_vect)
 {
-
-
-
-
-
-
-    //OCR1C = pot2;
-
-    //delay_efek[t%99] = ((t * ((t>>12|t>>8)&63&t>>4))/2);
- 
-    //int value50 = 30;
-
-
-
-    //    if (btn_toggle)
-    //    {
-    //        snd =(t*9&t>>pot1|t*pot2&t>>7|t*3&t/1024)-1;
-    //    }else{
-    //        snd = (t * (t>>5|t>>pot1))>>(t>>pot2); //viznut
-    //    }
-
     
+    uint8_t btn1_now = button_is_pressed(PINB, PB1);
+    uint8_t btn2_now = button_is_pressed(PINB, PB3);
 
-    //snd = {template};
-    //snd =t*(t/256)-t*(t/pot1)+t*(t>>5|t>>pot2|t<<2&t>>1);
-    //snd = (t>>5)|(t<<pot1)|((t&1023)^1981)|((t-67)>>pot2);
-    //snd = (t*9&t>>29|t*5&t>>24|t*3&t/1024)-1 ;
-    //snd = ((t*("36364689"[t>>13&7]&15))/12&128)+(((((t>>pot1)^(t>>12)-2)%11*t)/4|t>>pot2)&127)
-    //snd = (t * (t>>5|t>>pot1))>>(t>>pot2); //viznut
-    //snd = (t * ((t>>pot2|t>>8)&pot1&t>>4));//floor((delay_efek[t%99]);
-    //sfx = (snd >> 4 << 7);
-    //sfx = (snd >> 2 << 3);
-    //sfx = sfx | j;
-    //snd = (t*pot1&t>>7)|(t*pot2&t>>10)  ;
-    //snd =  t * ((t>>12|t>>8)&63&t>>4);
-    //snd = (t * ((t>>pot2|t>>pot1)&63&t>>4));//floor((delay_efek[t%99]);
-    //sfx = (snd >> pot2 << pot1);
-    //sfx = (snd >> 2 << 3);
-    //sfx = sfx | j;
-    //
+    uint8_t button1_state = 0;
+    uint8_t button2_state = 0;
+
+    //button state
+
+    //  button 1
+    if ( btn1_previous != btn1_now && btn1_now == 0 ) {    
+        button1_state  = BUTTON_PRESS;
+    }else if( btn1_previous != btn1_now && btn1_now == 1  )
+    {
+        button1_state  = BUTTON_RELEASE;
+    }else if (btn1_previous == btn1_now && btn1_now == 0)
+    {
+        button1_state  = BUTTON_HOLD;
+    }else{
+        button1_state  = BUTTON_NORMAL;
+    }   
+
+    //  button 2
+
+    if ( btn2_previous != btn2_now && btn2_now == 0 ) {    
+        button2_state  = BUTTON_PRESS;
+    }else if( btn2_previous != btn2_now && btn2_now == 1  )
+    {
+        button2_state  = BUTTON_RELEASE;
+    }else if (btn2_previous == btn2_now && btn2_now == 0)
+    {
+        button2_state  = BUTTON_HOLD;
+    }else{
+        button2_state  = BUTTON_NORMAL;
+    }   
 
 
-    //if (button_is_pressed(PINB, PB1)) {
-    //    t = t - 300;
-    //}
-    //OCR1C = pot1;
-    
-    //j = j - 1;
-    //if (j <= 0) {
-    //    j = value50;
-    //}
-    
+    //end of button state
+
+
+    //start button 1 action
+
+
+    if (button1_state == BUTTON_RELEASE)
+    {
+        if (songs < SONGS_COUNT)
+        {
+            songs++;
+        }else{
+            songs = 0;
+        }
+    }
+
+
+    //end button 1 action
+
+
+    //start button 2 action
+
+    if (button2_state == BUTTON_RELEASE)
+    {
+        if (songs > 0)
+        {
+            songs--;
+        }else{
+            songs = SONGS_COUNT;
+        }
+
+    }
+            
+    //end button 2 action
+
+
+    //sound generator pwm out
+    OCR0A = snd;
+    t++;
+
+    //button logic    
+    btn1_previous = btn1_now;
+    btn2_previous = btn2_now;
 
 }
 
