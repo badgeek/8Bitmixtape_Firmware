@@ -82,8 +82,8 @@ void adc_start()
 void timer_init()
 {
     //PWM SOUND OUTPUT
-    TCCR0A |= (1<<WGM00)|(1<<WGM01); //Fast pwm
-    //TCCR0A |= (1<<WGM00) ; //Phase correct pwm
+    //TCCR0A |= (1<<WGM00)|(1<<WGM01); //Fast pwm
+    TCCR0A |= (1<<WGM00) ; //Phase correct pwm
     TCCR0A |= (1<<COM0A1); //Clear OC0A/OC0B on Compare Match when up-counting.
     TCCR0B |= (1<<CS00);//no prescale
         
@@ -359,7 +359,7 @@ ISR(TIMER1_COMPA_vect)
         } 
     }
 
-}
+
 
 ISR(ADC_vect)
 {
