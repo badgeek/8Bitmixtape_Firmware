@@ -21,7 +21,7 @@ DEVICE		= attiny85
 CLOCK		= 16500000
 PROGRAMMER	= -c usbasp -b 9600
 OBJECTS		= noise.o
-FUSES		= -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
+FUSES		= -Uefuse:w:0xff:m -Uhfuse:w:0xdf:m -Ulfuse:w:0xe2:m
 AVRDIR		= /Users/manticore/Documents/Projects/QT/build-8BitMixtapeApp-Desktop-Release/8BitMixtapeApp.app/Contents/Resources/avr/bin
 AVRCONFIG	= /Users/manticore/Documents/Projects/QT/build-8BitMixtapeApp-Desktop-Release/8BitMixtapeApp.app/Contents/Resources/avr/etc/avrdude.conf
 
