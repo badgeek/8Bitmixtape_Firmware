@@ -19,12 +19,12 @@
 
 DEVICE		= attiny85
 CLOCK		= 16500000
-PROGRAMMER	= -c usbasp -b 9600
-OBJECTS		= main
+PROGRAMMER	= -cstk500v1 -P/dev/cu.usbserial-A5029U9R -b19200
 FUSES		= -Uefuse:w:0xff:m -Uhfuse:w:0xdf:m -Ulfuse:w:0xe2:m
 AVRDIR		= /Applications/Development/Arduino.app/Contents/Resources/Java/hardware/tools/avr
 AVRBIN		= $(AVRDIR)/bin
 AVRCONFIG	= $(AVRDIR)/etc/avrdude.conf
+OBJECTS		= main
 
 # ATMega8 fuse bits used above (fuse bits for other devices are different!):
 # Example for 8 MHz internal oscillator
