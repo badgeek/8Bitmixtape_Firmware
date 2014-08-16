@@ -358,6 +358,7 @@ ISR(TIMER1_COMPA_vect)
             disable_button_timer();
         } 
     }
+}
 
 
 
