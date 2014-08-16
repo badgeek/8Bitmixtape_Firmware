@@ -20,10 +20,11 @@
 DEVICE		= attiny85
 CLOCK		= 16500000
 PROGRAMMER	= -c usbasp -b 9600
-OBJECTS		= noise.o
+OBJECTS		= main
 FUSES		= -Uefuse:w:0xff:m -Uhfuse:w:0xdf:m -Ulfuse:w:0xe2:m
-AVRDIR		= /Users/manticore/Documents/Projects/QT/build-8BitMixtapeApp-Desktop-Release/8BitMixtapeApp.app/Contents/Resources/avr/bin
-AVRCONFIG	= /Users/manticore/Documents/Projects/QT/build-8BitMixtapeApp-Desktop-Release/8BitMixtapeApp.app/Contents/Resources/avr/etc/avrdude.conf
+AVRDIR		= /Applications/Development/Arduino.app/Contents/Resources/Java/hardware/tools/avr
+AVRBIN		= $(AVRDIR)/bin
+AVRCONFIG	= $(AVRDIR)/etc/avrdude.conf
 
 # ATMega8 fuse bits used above (fuse bits for other devices are different!):
 # Example for 8 MHz internal oscillator
@@ -50,11 +51,11 @@ AVRCONFIG	= /Users/manticore/Documents/Projects/QT/build-8BitMixtapeApp-Desktop-
 
 # Tune the lines below only if you know what you are doing:
 
-AVRDUDE = $(AVRDIR)/avrdude $(PROGRAMMER) -p $(DEVICE) -C $(AVRCONFIG)
-COMPILE = $(AVRDIR)/avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
+AVRDUDE = $(AVRBIN)/avrdude $(PROGRAMMER) -p $(DEVICE) -C $(AVRCONFIG)
+COMPILE = $(AVRBIN)/avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
 
 # symbolic targets:
-all:	noise.hex
+all:	$(OBJECTS).hex
 
 .c.o:
 	$(COMPILE) -c $< -o $@
@@ -70,7 +71,7 @@ all:	noise.hex
 	$(COMPILE) -S $< -o $@
 
 flash:	all
-	$(AVRDUDE) -U flash:w:noise.hex:i
+	$(AVRDUDE) -U flash:w:$(OBJECTS).hex:i
 
 fuse:
 	$(AVRDUDE) $(FUSES)
@@ -80,25 +81,25 @@ install: flash fuse
 
 # if you use a bootloader, change the command below appropriately:
 load: all
-	bootloadHID noise.hex
+	bootloadHID $(OBJECTS).hex
 
 clean:
-	rm -f noise.hex noise.elf $(OBJECTS)
+	rm -f $(OBJECTS).hex $(OBJECTS).elf $(OBJECTS).o
 
 # file targets:
-noise.elf: $(OBJECTS)
-	$(COMPILE) -o noise.elf $(OBJECTS)
+$(OBJECTS).elf: $(OBJECTS).o
+	$(COMPILE) -o $(OBJECTS).elf $(OBJECTS).o
 
-noise.hex: noise.elf
-	rm -f noise.hex
-	$(AVRDIR)/avr-objcopy -j .text -j .data -O ihex noise.elf noise.hex
-	$(AVRDIR)/avr-size --format=avr --mcu=$(DEVICE) noise.elf
+$(OBJECTS).hex: $(OBJECTS).elf
+	rm -f $(OBJECTS).hex
+	$(AVRBIN)/avr-objcopy -j .text -j .data -O ihex $(OBJECTS).elf $(OBJECTS).hex
+	$(AVRBIN)/avr-size --format=avr --mcu=$(DEVICE) $(OBJECTS).elf
 # If you have an EEPROM section, you must also create a hex file for the
 # EEPROM and add it to the "flash" target.
 
 # Targets for code debugging and analysis:
-disasm:	noise.elf
-	avr-objdump -d noise.elf
+disasm:	$(OBJECTS).elf
+	avr-objdump -d $(OBJECTS).elf
 
 cpp:
-	$(COMPILE) -E noise.c
+	$(COMPILE) -E $(OBJECTS).c
