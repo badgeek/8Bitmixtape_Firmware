@@ -1,5 +1,7 @@
-== 8BitMixtapeFirmware ==
 
+ #8BitMixtapeFirmware
+
+,,,
 // ATMEL ATTINY85 / ARDUINO
 //
 //             +-\/-+
@@ -8,3 +10,4 @@
 //    PB4  3|         |6  PB1
 //  GND  4|         |5  PB0
 //             +----+
+,,,
