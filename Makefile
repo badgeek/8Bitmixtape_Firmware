@@ -17,12 +17,14 @@
 #                   default_serial = "avrdoper"
 # FUSES ........ Parameters for avrdude to flash the fuses appropriately.
 
-DEVICE     = attiny85
-CLOCK      = 16500000
-PROGRAMMER = -c usbasp -b 9600
-OBJECTS    = noise.o
-FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
-AVRDIR 		= /Users/manticore/Documents/Projects/QT/build-8BitMixtapeApp-Desktop-Release/8BitMixtapeApp.app/Contents/Resources/avr/bin
+DEVICE		= attiny85
+CLOCK		= 16500000
+PROGRAMMER	= -c usbasp -b 9600
+OBJECTS		= noise.o
+FUSES		= -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
+AVRDIR		= /Users/manticore/Documents/Projects/QT/build-8BitMixtapeApp-Desktop-Release/8BitMixtapeApp.app/Contents/Resources/avr/bin
+AVRCONFIG	= /Users/manticore/Documents/Projects/QT/build-8BitMixtapeApp-Desktop-Release/8BitMixtapeApp.app/Contents/Resources/avr/etc/avrdude.conf
+
 # ATMega8 fuse bits used above (fuse bits for other devices are different!):
 # Example for 8 MHz internal oscillator
 # Fuse high byte:
@@ -48,7 +50,7 @@ AVRDIR 		= /Users/manticore/Documents/Projects/QT/build-8BitMixtapeApp-Desktop-R
 
 # Tune the lines below only if you know what you are doing:
 
-AVRDUDE = $(AVRDIR)/avrdude $(PROGRAMMER) -p $(DEVICE) -C /Users/manticore/Documents/Projects/QT/build-8BitMixtapeApp-Desktop-Release/8BitMixtapeApp.app/Contents/Resources/avr/etc/avrdude.conf
+AVRDUDE = $(AVRDIR)/avrdude $(PROGRAMMER) -p $(DEVICE) -C $(AVRCONFIG)
 COMPILE = $(AVRDIR)/avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
 
 # symbolic targets:
