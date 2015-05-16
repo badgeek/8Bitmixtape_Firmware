@@ -18,7 +18,7 @@
  
 */
 
-#define SONGS_COUNT 9
+#define SONGS_COUNT 7
 
 volatile unsigned long t; // long
 volatile unsigned long u; // long
@@ -175,46 +175,72 @@ int main(void)
         */
         switch (songs)
         {
-            case 0:
-            snd = (t*(5+(pot1/5))&t>>7)|(t*3&t>>(10-(pot2/5)));
-            break;
+
+
+case 0:
+snd = (pot1*5&t>>7)|(t*pot2&t>>10);
+break;
+case 1:
+snd = (pot1|(t>>9|t>>7))*t&(pot2>>11|t>>9);
+break;
+case 2:
+snd = (pot1*9&t>>4|t*5&t>>7|pot2*3&t/1024)-1;
+break;
+case 3:
+snd = (t>>6|t|t>>(t>>16))*pot1+((t>>11)&pot2);
+break;
+case 4:
+snd = t*(t^t+(t>>15|pot1)^(t-(1280-pot2)^t)>>10);
+break;
+case 5:
+snd = ((t&4096)?((t*(t^t%255)|(t>>(4+pot1)))>>1):(t>>pot2)|((t&8192)?t<<2:t));
+break;
+case 6:
+snd = (t&t>>12)*(t>>(4+pot1)|t>>(8+pot2))^t>>6;
+break;
+case 7:
+snd = t*(((t>>12)|(t>>(8+pot1)))&((63+pot2)&(t>>4)));
+break;
+            // case 0:
+            // snd = (t*(5+(pot1/5))&t>>7)|(t*3&t>>(10-(pot2/5)));
+            // break;
             
-            case 1:
-            snd = (t|(t>>(9+(pot1/2))|t>>7))*t&(t>>(11+(pot2/2))|t>>9);
-            break;
+            // case 1:
+            // snd = (t|(t>>(9+(pot1/2))|t>>7))*t&(t>>(11+(pot2/2))|t>>9);
+            // break;
             
-            case 2:
-            snd = (t*9&t>>4|t*5&t>>(7+(pot1/2))|t*3&t/(1024-(pot2/2)))-1;
-            break;
+            // case 2:
+            // snd = (t*9&t>>4|t*5&t>>(7+(pot1/2))|t*3&t/(1024-(pot2/2)))-1;
+            // break;
 
-            case 3:
-            snd = (t>>6|t|t>>(t>>(16-(pot1/2))))*10+((t>>11)&(7+(pot2/2)));
-            break;
+            // case 3:
+            // snd = (t>>6|t|t>>(t>>(16-(pot1/2))))*10+((t>>11)&(7+(pot2/2)));
+            // break;
 
-            case 4:
-            snd = t*(((t>>(11-(pot2/2)))&(t>>8))&((123-pot1)&(t>>3)));
-            break;
+            // case 4:
+            // snd = t*(((t>>(11-(pot2/2)))&(t>>8))&((123-pot1)&(t>>3)));
+            // break;
 
-            case 5:
-            snd = t*(t^t+(t>>15|1)^(t-(1280-(pot1/2))^t)>>(10-(pot2/5)));
-            break;
+            // case 5:
+            // snd = t*(t^t+(t>>15|1)^(t-(1280-(pot1/2))^t)>>(10-(pot2/5)));
+            // break;
 
-            case 6:
-            snd = t * ((pot1>>12|t>>8)&pot2&t>>4);
-            //snd = (t*t/(256-pot1))&(t>>((t/(1024-pot2))%16))^t%64*(0xC0D3DE4D69>>(t>>9&30)&t%32)*t>>18;
-            break;
+            // case 6:
+            // snd = t * ((pot1>>12|t>>8)&pot2&t>>4);
+            // //snd = (t*t/(256-pot1))&(t>>((t/(1024-pot2))%16))^t%64*(0xC0D3DE4D69>>(t>>9&30)&t%32)*t>>18;
+            // break;
 
-            case 7:
-            snd = (t&t>>(12+(pot1/2)))*(t>>4|t>>(8-(pot2/2)))^t>>6;
-            break;
+            // case 7:
+            // snd = (t&t>>(12+(pot1/2)))*(t>>4|t>>(8-(pot2/2)))^t>>6;
+            // break;
 
-            case 8:
-            snd = t*(((t>>9)^((t>>9)-(1+(pot1/2)))^1)%(13+(pot2/2)));
-            break;
+            // case 8:
+            // snd = t*(((t>>9)^((t>>9)-(1+(pot1/2)))^1)%(13+(pot2/2)));
+            // break;
 
-            case 9:
-            snd = t*(((t>>(12+(pot1/2)))|(t>>8))&((63-(pot2/2))&(t>>4)));
-            break;
+            // case 9:
+            // snd = t*(((t>>(12+(pot1/2)))|(t>>8))&((63-(pot2/2))&(t>>4)));
+            // break;
             
         }
 
