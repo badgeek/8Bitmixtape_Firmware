@@ -28,7 +28,8 @@ BAUDRATE	= 19200
 FUSES		= -Uefuse:w:0xff:m -Uhfuse:w:0xdf:m -Ulfuse:w:0xe2:m
 
 #AVR
-AVRDIR		= /Applications/Development/Arduino.app/Contents/Resources/Java/hardware/tools/avr
+AVRDIR		= /Applications/Development/Arduino1.0.5_trinket.app/Contents/Resources/Java/hardware/tools/avr
+#AVRDIR		= /Applications/Development/Arduino.app/Contents/Resources/Java/hardware/tools/avr
 AVRBIN		= $(AVRDIR)/bin
 AVRCONFIG	= $(AVRDIR)/etc/avrdude.conf
 OBJECTS		= main
