@@ -23,44 +23,25 @@ CLOCK		= 16500000
 
 #PROGRAMMER
 PROGRAMMER	= stk500v1
-SERIAL_DEVICE = /dev/cu.usbserial-A5029U9R
+#SERIAL_DEVICE = /dev/cu.usbserial-A60062Vz
+SERIAL_DEVICE   =  /dev/cu.usbserial-A5029U9R
 BAUDRATE	= 19200
-FUSES		= -Uefuse:w:0xff:m -Uhfuse:w:0xdf:m -Ulfuse:w:0xe2:m
+
+# For computing fuse byte values for other devices and options see
+# the fuse bit calculator at http://www.engbedded.com/fusecalc/
+
+FUSES		= -e -Uefuse:w:0xFF:m -Uhfuse:w:0xD4:m -Ulfuse:w:0xC1:m 
 
 #AVR
 AVRDIR		= /Applications/Development/Arduino1.0.5_trinket.app/Contents/Resources/Java/hardware/tools/avr
-#AVRDIR		= /Applications/Development/Arduino.app/Contents/Resources/Java/hardware/tools/avr
 AVRBIN		= $(AVRDIR)/bin
 AVRCONFIG	= $(AVRDIR)/etc/avrdude.conf
 OBJECTS		= main
 
-# ATMega8 fuse bits used above (fuse bits for other devices are different!):
-# Example for 8 MHz internal oscillator
-# Fuse high byte:
-# 0xd9 = 1 1 0 1   1 0 0 1 <-- BOOTRST (boot reset vector at 0x0000)
-#        ^ ^ ^ ^   ^ ^ ^------ BOOTSZ0
-#        | | | |   | +-------- BOOTSZ1
-#        | | | |   +---------- EESAVE (set to 0 to preserve EEPROM over chip erase)
-#        | | | +-------------- CKOPT (clock option, depends on oscillator type)
-#        | | +---------------- SPIEN (if set to 1, serial programming is disabled)
-#        | +------------------ WDTON (if set to 0, watchdog is always on)
-#        +-------------------- RSTDISBL (if set to 0, RESET pin is disabled)
-# Fuse low byte:
-# 0x24 = 0 0 1 0   0 1 0 0
-#        ^ ^ \ /   \--+--/
-#        | |  |       +------- CKSEL 3..0 (8M internal RC)
-#        | |  +--------------- SUT 1..0 (slowly rising power)
-#        | +------------------ BODEN (if 0, brown-out detector is enabled)
-#        +-------------------- BODLEVEL (if 0: 4V, if 1: 2.7V)
-#
-# For computing fuse byte values for other devices and options see
-# the fuse bit calculator at http://www.engbedded.com/fusecalc/
-
-
 # Tune the lines below only if you know what you are doing:
 AVRDUDE_PROGRAMMER = -c$(PROGRAMMER) -P$(SERIAL_DEVICE) -b$(BAUDRATE)
 AVRDUDE = $(AVRBIN)/avrdude $(AVRDUDE_PROGRAMMER) -p $(DEVICE) -C $(AVRCONFIG)
-COMPILE = $(AVRBIN)/avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
+COMPILE = $(AVRBIN)/avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE) --std=c99
 
 # symbolic targets:
 all:	$(OBJECTS).hex
