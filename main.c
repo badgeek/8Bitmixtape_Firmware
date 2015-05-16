@@ -81,6 +81,9 @@ void adc_start()
 
 void timer_init()
 {
+    //no prescale
+    clock_prescale_set(clock_div_1);
+
     //PWM SOUND OUTPUT
     TCCR0A |= (1<<WGM00)|(1<<WGM01); //Fast pwm
     //TCCR0A |= (1<<WGM00) ; //Phase correct pwm
